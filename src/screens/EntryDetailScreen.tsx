@@ -1,10 +1,10 @@
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
-import { Copy, Edit2, Eye, EyeOff, Trash2 } from 'lucide-react-native';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { ChevronLeft, Copy, Edit2, Eye, EyeOff, Trash2 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import ReactNativeBiometrics from 'react-native-biometrics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../components/Button';
 import { useEntriesStore } from '../store/entriesStore';
@@ -54,8 +54,11 @@ export const EntryDetailScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={{ color: theme.colors.primary, fontSize: 16 }}>Back</Text>
+                <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <ChevronLeft color={theme.colors.primary} size={28} />
+                        <Text style={{ color: theme.colors.primary, fontSize: 17, marginLeft: -4 }}>Back</Text>
+                    </View>
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row' }}>
                     <TouchableOpacity onPress={() => navigation.navigate('AddEntry', { entryId: entry.id })} style={{ marginRight: 16 }}>
@@ -97,18 +100,18 @@ export const EntryDetailScreen = () => {
                                 onPress={async () => {
                                     if (!showPassword) {
                                         // Require ID to show
-                                        const rnBiometrics = new ReactNativeBiometrics(); // Use default constructor for safety
                                         try {
-                                            const { success } = await rnBiometrics.simplePrompt({ promptMessage: 'Authenticate to view password' });
-                                            if (success) {
+                                            const result = await LocalAuthentication.authenticateAsync({
+                                                promptMessage: 'Authenticate to view password',
+                                                fallbackLabel: 'Use Passcode'
+                                            });
+                                            if (result.success) {
                                                 setShowPassword(true);
                                             } else {
-                                                // User cancelled or failed
                                                 Alert.alert('Authentication Failed', 'Could not verify identity.');
                                             }
                                         } catch (error) {
                                             console.error('Biometric error', error);
-                                            // Fallback if needed or just alert
                                             Alert.alert('Error', 'Biometric authentication unavailable.');
                                         }
                                     } else {

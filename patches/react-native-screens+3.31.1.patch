@@ -1,0 +1,12 @@
+diff --git a/node_modules/react-native-screens/src/components/ScreenStack.tsx b/node_modules/react-native-screens/src/components/ScreenStack.tsx
+index 1783dcf..e08dbff 100644
+--- a/node_modules/react-native-screens/src/components/ScreenStack.tsx
++++ b/node_modules/react-native-screens/src/components/ScreenStack.tsx
+@@ -1,5 +1,6 @@
+ import React from 'react';
+-import { ScreenStackProps, freezeEnabled } from 'react-native-screens';
++import { ScreenStackProps } from '../types';
++import { freezeEnabled } from '../core';
+ import DelayedFreeze from './helpers/DelayedFreeze';
+ 
+ // Native components

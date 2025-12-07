@@ -1,5 +1,6 @@
 
-import { Plus, Trash2 } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { ChevronLeft, Plus, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +11,7 @@ import { useEntriesStore } from '../store/entriesStore';
 import { theme } from '../theme';
 
 export const CategoryManagementScreen = () => {
+    const navigation = useNavigation<any>();
     const [categories, setCategories] = useState<any[]>([]);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [loading, setLoading] = useState(false);
@@ -75,6 +77,9 @@ export const CategoryManagementScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 16 }}>
+                    <ChevronLeft color={theme.colors.primary} size={28} />
+                </TouchableOpacity>
                 <Text style={styles.title}>Categories</Text>
             </View>
 
@@ -111,7 +116,7 @@ export const CategoryManagementScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.colors.background },
-    header: { padding: theme.spacing.m, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+    header: { flexDirection: 'row', alignItems: 'center', padding: theme.spacing.m, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
     title: { ...theme.typography.h2, color: theme.colors.text },
     inputRow: { flexDirection: 'row', padding: theme.spacing.m, alignItems: 'center' },
     addButton: { backgroundColor: theme.colors.primary, width: 48, height: 48, justifyContent: 'center', alignItems: 'center', borderRadius: 8, marginLeft: 8 },

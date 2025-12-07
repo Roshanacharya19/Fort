@@ -1,6 +1,7 @@
 import * as Keychain from 'react-native-keychain';
 
 const SERVICE_NAME = 'com.fort.app.secure';
+const BIOMETRIC_SERVICE_NAME = 'com.fort.app.secure.biometric';
 
 export const SecureStorageService = {
     /**
@@ -27,5 +28,36 @@ export const SecureStorageService = {
 
     clearAuthData: async () => {
         await Keychain.resetGenericPassword({ service: SERVICE_NAME });
+    },
+
+    saveBiometricKey: async (key: string) => {
+        await Keychain.setGenericPassword('biometric_key', key, {
+            service: BIOMETRIC_SERVICE_NAME,
+            accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
+            accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+            storage: Keychain.STORAGE_TYPE.RSA,
+        });
+    },
+
+    getBiometricKey: async () => {
+        try {
+            const credentials = await Keychain.getGenericPassword({
+                service: BIOMETRIC_SERVICE_NAME,
+                authenticationPrompt: {
+                    title: 'Unlock Fort',
+                },
+            });
+            if (credentials) {
+                return credentials.password;
+            }
+            return null;
+        } catch (error) {
+            console.log('Biometric retrieval failed', error);
+            return null;
+        }
+    },
+
+    clearBiometricKey: async () => {
+        await Keychain.resetGenericPassword({ service: BIOMETRIC_SERVICE_NAME });
     }
 };

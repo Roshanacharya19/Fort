@@ -1,10 +1,11 @@
 
 import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard'; // For export (copy to clipboard for MVP)
-import { ChevronRight, Clock, Download, LogOut, Shield } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Clock, Coffee, Download, LogOut, Shield } from 'lucide-react-native';
 import React from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SecureStorageService } from '../services/secureStorage';
 import { useAuthStore } from '../store/authStore';
 import { useEntriesStore } from '../store/entriesStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -15,6 +16,28 @@ export const SettingsScreen = () => {
     const logout = useAuthStore(state => state.logout);
     const { biometricsEnabled, autoLockTimeout, toggleBiometrics, setAutoLockTimeout } = useSettingsStore();
     const entries = useEntriesStore(state => state.entries);
+
+    const handleBiometricsToggle = async (value: boolean) => {
+        if (value) {
+            // Enabling biometrics
+            const key = useAuthStore.getState().encryptionKey;
+            if (key) {
+                try {
+                    await SecureStorageService.saveBiometricKey(key);
+                    toggleBiometrics(true);
+                } catch (e) {
+                    Alert.alert('Error', 'Failed to enable biometrics. Please try again.');
+                    console.error('Biometric setup failed', e);
+                }
+            } else {
+                Alert.alert('Error', 'App must be unlocked to enable biometrics.');
+            }
+        } else {
+            // Disabling biometrics
+            await SecureStorageService.clearBiometricKey();
+            toggleBiometrics(false);
+        }
+    };
 
     const handleExport = () => {
         // Security risk! But requested as feature.
@@ -33,6 +56,9 @@ export const SettingsScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 16 }}>
+                    <ChevronLeft color={theme.colors.primary} size={28} />
+                </TouchableOpacity>
                 <Text style={styles.title}>Settings</Text>
             </View>
 
@@ -91,6 +117,18 @@ export const SettingsScreen = () => {
                 </View>
 
                 <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Support</Text>
+
+                    <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} onPress={() => Linking.openURL('https://buymeacoffee.com/sn00py')}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Coffee color={theme.colors.text} size={20} style={{ marginRight: 12 }} />
+                            <Text style={styles.rowLabel}>Buy me a coffee</Text>
+                        </View>
+                        <ChevronRight color={theme.colors.textSecondary} size={20} />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Account</Text>
 
                     <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} onPress={logout}>
@@ -115,6 +153,8 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.background,
     },
     header: {
+        flexDirection: 'row',
+        alignItems: 'center',
         padding: theme.spacing.m,
         borderBottomWidth: 1,
         borderBottomColor: theme.colors.border,

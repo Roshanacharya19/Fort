@@ -1,8 +1,8 @@
 import * as Crypto from 'expo-crypto';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { Fingerprint } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import ReactNativeBiometrics, { BiometryTypes } from 'react-native-biometrics';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Logo } from '../../components/Logo';
@@ -12,7 +12,7 @@ import { SecureStorageService } from '../../services/secureStorage';
 import { useAuthStore } from '../../store/authStore';
 import { theme } from '../../theme';
 
-const rnBiometrics = new ReactNativeBiometrics({ allowDeviceCredentials: true });
+
 
 export const LoginScreen = () => {
     const [password, setPassword] = useState('');
@@ -26,20 +26,34 @@ export const LoginScreen = () => {
     }, []);
 
     const checkBiometrics = async () => {
-        const { available, biometryType } = await rnBiometrics.isSensorAvailable();
-        if (available && biometryType) {
-            setBiometryType(biometryType);
+        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        if (hasHardware && isEnrolled) {
+            const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+            if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+                setBiometryType('FaceID');
+            } else {
+                setBiometryType('Fingerprint');
+            }
         }
     };
 
     const promptBiometrics = async () => {
         try {
-            const { success } = await rnBiometrics.simplePrompt({ promptMessage: 'Unlock Fort' });
-            if (success) {
-                Alert.alert('Not Implemented', 'Biometric unlock requires Key storage setup which is pending.');
+            const key = await SecureStorageService.getBiometricKey();
+            if (key) {
+                const dbSuccess = DatabaseService.init(key);
+                if (dbSuccess) {
+                    setKey(key);
+                    setAuthenticated(true);
+                } else {
+                    Alert.alert('Error', 'Database init failed with biometric key.');
+                }
+            } else {
+                // User cancelled or no key
             }
         } catch (e) {
-            console.log('Biometric failed', e);
+            console.log('Biometric unlock failed', e);
         }
     };
 
@@ -106,7 +120,7 @@ export const LoginScreen = () => {
             {biometryType && (
                 <TouchableOpacity onPress={promptBiometrics} style={styles.biometricButton}>
                     <Fingerprint size={32} color={theme.colors.primary} />
-                    <Text style={{ color: theme.colors.primary, marginTop: 8 }}>Use {biometryType === BiometryTypes.FaceID ? 'Face ID' : 'Fingerprint'}</Text>
+                    <Text style={{ color: theme.colors.primary, marginTop: 8 }}>Use {biometryType === 'FaceID' ? 'Face ID' : 'Fingerprint'}</Text>
                 </TouchableOpacity>
             )}
         </SafeAreaView>

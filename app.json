@@ -23,8 +23,13 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "package": "com.fort.app",
+      "versionCode": 4,
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -45,13 +50,34 @@
         {
           "ios": {
             "deploymentTarget": "17.0"
+          },
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "packagingOptions": {
+              "pickFirst": [
+                "lib/**/libc++_shared.so",
+                "lib/**/libreact_nativemodule_core.so",
+                "lib/**/libturbomodulejsijni.so"
+              ]
+            }
           }
         }
       ],
-      "./plugins/withBiometrics",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Fort to use FaceID to authenticate you."
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ca6c4882-ccc4-4f44-9454-8645e7e93f92"
+      }
     }
   }
 }
